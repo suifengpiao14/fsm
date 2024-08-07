@@ -1,6 +1,7 @@
 package fsm_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,7 +52,7 @@ var orderEvents = fsm.Events{
 	},
 	// 已收货
 	{
-		Name: "order.shipped",
+		Name: "order.recived",
 		Src: []string{
 			Order_status_init,     //支持乱序跳跃
 			Order_status_created,  //支持乱序跳跃
@@ -63,7 +64,7 @@ var orderEvents = fsm.Events{
 	},
 	// 已退款
 	{
-		Name: "order.shipped",
+		Name: "order.refund",
 		Src: []string{
 			Order_status_init,     //支持乱序跳跃
 			Order_status_created,  //支持乱序跳跃
@@ -76,7 +77,7 @@ var orderEvents = fsm.Events{
 	},
 	// 已取消
 	{
-		Name: "order.shipped",
+		Name: "order.cancel",
 		Src: []string{
 			Order_status_init,    //支持乱序跳跃
 			Order_status_created, //创建单，未付款前取消
@@ -113,6 +114,31 @@ func TestIsReverseOrder(t *testing.T) {
 		)
 		ok := orderFsm.IsReverseOrder(newStatus)
 		require.Equal(t, false, ok)
+	})
+
+}
+
+func TestAvailableSrcStates(t *testing.T) {
+	oldStatus := Order_status_refunded
+	var orderFsm = fsm.NewFSM(
+		oldStatus,
+		orderEvents,
+		fsm.Callbacks{},
+	)
+	states := orderFsm.AvailableSrcStates()
+	fmt.Println(states)
+}
+
+func TestCanConvertTo(t *testing.T) {
+	t.Run("true", func(t *testing.T) {
+		oldStatus := Order_status_refunded
+		var orderFsm = fsm.NewFSM(
+			Order_status_created,
+			orderEvents,
+			fsm.Callbacks{},
+		)
+		ok := orderFsm.CanConvertTo(oldStatus)
+		require.Equal(t, true, ok)
 	})
 
 }
